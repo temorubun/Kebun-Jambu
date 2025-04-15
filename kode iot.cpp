@@ -5,10 +5,10 @@
 #include <addons/RTDBHelper.h>
 
 // Define pins
-const int PUMP_PIN1 = 12;
-const int PUMP_PIN2 = 14;
-const int MOISTURE_PIN1 = 27;
-const int MOISTURE_PIN2 = 26;
+const int PUMP_PIN1 = 2;
+const int PUMP_PIN2 = 4;
+const int MOISTURE_PIN1 = 32;
+const int MOISTURE_PIN2 = 33;
 
 // WiFi credentials  
 const char* ssid = "V20430";
@@ -36,9 +36,11 @@ int previousMoistureState2 = -1; // -1 = initial state, 0 = dry (<60), 1 = wet (
 void setup() {
   Serial.begin(115200);
   
-  // Initialize pump pins as output
+  // Initialize pump pins as output and set initial state to OFF
   pinMode(PUMP_PIN1, OUTPUT);
   pinMode(PUMP_PIN2, OUTPUT);
+  digitalWrite(PUMP_PIN1, LOW); // Pump 1 is initially OFF
+  digitalWrite(PUMP_PIN2, LOW); // Pump 2 is initially OFF
   
   // Connect to WiFi
   WiFi.begin(ssid, password);
