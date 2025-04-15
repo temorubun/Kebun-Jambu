@@ -1,0 +1,32 @@
+#include <Arduino.h>
+
+const int sensorPin = 32; // ganti dengan GPIO34 jika pakai ESP32
+
+// Nilai kalibrasi
+const int DRY_VALUE = 2559;   // Nilai ADC saat kondisi kering
+const int WET_VALUE = 1123;   // Nilai ADC saat kondisi basah
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(sensorPin, INPUT);
+}
+
+void loop() {
+  // Baca nilai sensor
+  int sensorValue = analogRead(sensorPin);
+  
+  // Hitung persentase kelembaban
+  int moisturePercentage = map(sensorValue, DRY_VALUE, WET_VALUE, 0, 100);
+  
+  // Pastikan persentase tidak di luar rentang 0-100
+  moisturePercentage = constrain(moisturePercentage, 0, 100);
+  
+  // Tampilkan hasil
+  Serial.print("Nilai ADC: ");
+  Serial.println(sensorValue);
+  Serial.print("Kelembaban Tanah: ");
+  Serial.print(moisturePercentage);
+  Serial.println("%");
+  
+  delay(1000); // Pembacaan setiap 1 detik
+}
