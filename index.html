@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#065f46">
+    <meta name="description" content="Aplikasi monitoring kebun pintar">
+    <title>My Garden - Monitoring</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='24' height='22' viewBox='0 0 24 22' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.75 3.49999C9.06563 3.49999 5.94844 5.91405 4.88906 9.24218C6.46406 8.4453 8.24062 7.99999 10.125 7.99999H14.25C14.6625 7.99999 15 8.33749 15 8.74999C15 9.16249 14.6625 9.49999 14.25 9.49999H13.5H10.125C9.34687 9.49999 8.59219 9.58905 7.86563 9.75311C6.65156 10.0297 5.52188 10.5219 4.51875 11.1922C1.79531 13.0062 0 16.1047 0 19.625V20.375C0 20.9984 0.501562 21.5 1.125 21.5C1.74844 21.5 2.25 20.9984 2.25 20.375V19.625C2.25 17.3422 3.22031 15.2891 4.77188 13.85C5.7 17.3891 8.92031 20 12.75 20H12.7969C18.9891 19.9672 24 13.8641 24 6.34061C24 4.34374 23.6484 2.4453 23.0109 0.734364C22.8891 0.410926 22.4156 0.424989 22.2516 0.729676C21.3703 2.37968 19.6266 3.49999 17.625 3.49999H12.75Z' fill='%23059669'/%3E%3C/svg%3E">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #ecfdf5;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #065f46;
+        }
+
+        .login-btn {
+            background-color: #10b981;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Card styles */
+        .card {
+            background-color: white;
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #065f46;
+            margin-bottom: 16px;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .image-box {
+            width: 256px;
+            height: 256px;
+            background-color: #4b5563;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .device-image-box {
+            width: 256px;
+            height: 256px;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-box {
+            background-color: #ecfdf5;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .status-label {
+            color: #059669;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .status-value {
+            color: #065f46;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        /* Status styles */
+        .status-value.active {
+            color: #059669;
+        }
+
+        .status-value.inactive {
+            color: #eb6363;
+        }
+
+        .icon-circle {
+            background-color: #10b981;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .icon-circle.active {
+            background-color: #059669;
+        }
+
+        .icon-circle.inactive {
+            background-color: #10b981;
+        }
+
+        .icon {
+            width: 32px;
+            height: 32px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .image-box, .device-image-box {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .icon-circle {
+                width: 56px;
+                height: 56px;
+            }
+            
+            .icon {
+                width: 28px;
+                height: 28px;
+            }
+            
+            .status-value {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title"><a href="index.html" style="text-decoration: none; color: inherit;">My Garden</a></h1>
+            <button class="login-btn" id="authButton">Login</button>
+        </header>
+
+        <div class="card">
+            <h2 class="card-title">Soil Status - Garden 1</h2>
+            
+            <div class="image-container">
+                <div class="image-box">
+                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/status-bunga-dnd9WGLvKKKJI7AvKzoRb88Si9Co8E.png" alt="Plant">
+                </div>
+            </div>
+            
+            <div class="status-box">
+                <div>
+                    <p class="status-label">Moisture Level</p>
+                    <p class="status-value" id="moisture-level1">Loading...</p>
+                </div>
+                <div class="icon-circle">
+                    <svg width="18" height="24" viewBox="0 0 18 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 24C4.03125 24 0 19.9688 0 15C0 10.725 6.10313 2.70469 7.80938 0.548437C8.09063 0.196875 8.50781 0 8.95781 0H9.04219C9.49219 0 9.90937 0.196875 10.1906 0.548437C11.8969 2.70469 18 10.725 18 15C18 19.9688 13.9688 24 9 24ZM4.5 15.75C4.5 15.3375 4.1625 15 3.75 15C3.3375 15 3 15.3375 3 15.75C3 18.6516 5.34844 21 8.25 21C8.6625 21 9 20.6625 9 20.25C9 19.8375 8.6625 19.5 8.25 19.5C6.17812 19.5 4.5 17.8219 4.5 15.75Z" fill="black"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="status-box">
+                <div>
+                    <p class="status-label">Pump Status</p>
+                    <p class="status-value" id="pump-status1">Loading...</p>
+                </div>
+                <div class="icon-circle" id="pump-icon1">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.36 6.64C19.6184 7.89879 20.4753 9.50244 20.8223 11.2482C21.1693 12.9939 20.9909 14.8034 20.3096 16.4478C19.6284 18.0921 18.4748 19.4976 16.9948 20.4864C15.5148 21.4752 13.7749 22.0029 11.995 22.0029C10.2151 22.0029 8.47515 21.4752 6.99517 20.4864C5.51519 19.4976 4.36164 18.0921 3.68036 16.4478C2.99909 14.8034 2.82069 12.9939 3.16772 11.2482C3.51475 9.50244 4.37162 7.89879 5.63 6.64" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2V12" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Soil Status - Garden 2</h2>
+            
+            <div class="image-container">
+                <div class="image-box">
+                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/status-bunga-dnd9WGLvKKKJI7AvKzoRb88Si9Co8E.png" alt="Plant">
+                </div>
+            </div>
+            
+            <div class="status-box">
+                <div>
+                    <p class="status-label">Moisture Level</p>
+                    <p class="status-value" id="moisture-level2">Loading...</p>
+                </div>
+                <div class="icon-circle">
+                    <svg width="18" height="24" viewBox="0 0 18 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 24C4.03125 24 0 19.9688 0 15C0 10.725 6.10313 2.70469 7.80938 0.548437C8.09063 0.196875 8.50781 0 8.95781 0H9.04219C9.49219 0 9.90937 0.196875 10.1906 0.548437C11.8969 2.70469 18 10.725 18 15C18 19.9688 13.9688 24 9 24ZM4.5 15.75C4.5 15.3375 4.1625 15 3.75 15C3.3375 15 3 15.3375 3 15.75C3 18.6516 5.34844 21 8.25 21C8.6625 21 9 20.6625 9 20.25C9 19.8375 8.6625 19.5 8.25 19.5C6.17812 19.5 4.5 17.8219 4.5 15.75Z" fill="black"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="status-box">
+                <div>
+                    <p class="status-label">Pump Status</p>
+                    <p class="status-value" id="pump-status2">Loading...</p>
+                </div>
+                <div class="icon-circle" id="pump-icon2">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.36 6.64C19.6184 7.89879 20.4753 9.50244 20.8223 11.2482C21.1693 12.9939 20.9909 14.8034 20.3096 16.4478C19.6284 18.0921 18.4748 19.4976 16.9948 20.4864C15.5148 21.4752 13.7749 22.0029 11.995 22.0029C10.2151 22.0029 8.47515 21.4752 6.99517 20.4864C5.51519 19.4976 4.36164 18.0921 3.68036 16.4478C2.99909 14.8034 2.82069 12.9939 3.16772 11.2482C3.51475 9.50244 4.37162 7.89879 5.63 6.64" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2V12" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOJ--IeEt2l9x9MuPb6DAZHFbSKmeaARQ",
+            authDomain: "kebun-jambu.firebaseapp.com",
+            projectId: "kebun-jambu",
+            storageBucket: "kebun-jambu.firebasestorage.app",
+            messagingSenderId: "215795847510",
+            appId: "1:215795847510:web:2bd4205097834fe15806f7",
+            measurementId: "G-8E3HCDTCD0",
+            databaseURL: "https://kebun-jambu-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+        const auth = getAuth();
+
+        // Get references to the database
+        const sensorRef = ref(database, 'Kebun-Jambu/Sensor-Kelembaban-tanah');
+        const pumpRef = ref(database, 'Kebun-Jambu/pompa');
+
+        // Update sensor values
+        onValue(sensorRef, (snapshot) => {
+            const data = snapshot.val();
+            document.getElementById('moisture-level1').textContent = data['kelembaban-tanah1'] + '%';
+            document.getElementById('moisture-level2').textContent = data['kelembaban-tanah2'] + '%';
+        });
+
+        // Update pump status
+        onValue(pumpRef, (snapshot) => {
+            const data = snapshot.val();
+            
+            // Update pump 1
+            document.getElementById('pump-status1').textContent = data.pompa1;
+            const pumpIcon1 = document.getElementById('pump-icon1');
+            if (data.pompa1 === 'on') {
+                pumpIcon1.classList.add('active');
+                pumpIcon1.classList.remove('inactive');
+            } else {
+                pumpIcon1.classList.add('inactive');
+                pumpIcon1.classList.remove('active');
+            }
+
+            // Update pump 2
+            document.getElementById('pump-status2').textContent = data.pompa2;
+            const pumpIcon2 = document.getElementById('pump-icon2');
+            if (data.pompa2 === 'on') {
+                pumpIcon2.classList.add('active');
+                pumpIcon2.classList.remove('inactive');
+            } else {
+                pumpIcon2.classList.add('inactive');
+                pumpIcon2.classList.remove('active');
+            }
+        });
+
+        // Check auth state and update button
+        const authButton = document.getElementById('authButton');
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                authButton.textContent = 'Go to Controller';
+                authButton.onclick = () => window.location.href = 'controller.html';
+            } else {
+                authButton.textContent = 'Login';
+                authButton.onclick = () => window.location.href = 'login.html';
+            }
+        });
+    </script>
+    <script>
+        // Only register service worker if served from a web server
+        if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Garden - Controller</title>
+    
+    <!-- Update CSP untuk mengizinkan semua resource yang dibutuhkan -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' data: gap: https://* 'unsafe-eval' 'unsafe-inline';
+        script-src 'self' https://* 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' https://* data: blob:;
+        media-src *;
+        connect-src *;
+    ">
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='24' height='22' viewBox='0 0 24 22' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.75 3.49999C9.06563 3.49999 5.94844 5.91405 4.88906 9.24218C6.46406 8.4453 8.24062 7.99999 10.125 7.99999H14.25C14.6625 7.99999 15 8.33749 15 8.74999C15 9.16249 14.6625 9.49999 14.25 9.49999H13.5H10.125C9.34687 9.49999 8.59219 9.58905 7.86563 9.75311C6.65156 10.0297 5.52188 10.5219 4.51875 11.1922C1.79531 13.0062 0 16.1047 0 19.625V20.375C0 20.9984 0.501562 21.5 1.125 21.5C1.74844 21.5 2.25 20.9984 2.25 20.375V19.625C2.25 17.3422 3.22031 15.2891 4.77188 13.85C5.7 17.3891 8.92031 20 12.75 20H12.7969C18.9891 19.9672 24 13.8641 24 6.34061C24 4.34374 23.6484 2.4453 23.0109 0.734364C22.8891 0.410926 22.4156 0.424989 22.2516 0.729676C21.3703 2.37968 19.6266 3.49999 17.625 3.49999H12.75Z' fill='%23059669'/%3E%3C/svg%3E">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background-color: #ecfdf5;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Garden card styles */
+        .garden-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .garden-card h2 {
+            color: #065f46;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Header styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #065f46;
+        }
+
+        .settings-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: black;
+            border-radius: 50%;
+            padding: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .settings-button:hover {
+            background-color: #ecfdf5;
+        }
+
+        /* Dropdown menu */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .user-name {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #065f46;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            color: #eb6363;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #fee2e2;
+        }
+
+        .dropdown-item svg {
+            margin-right: 0.5rem;
+        }
+
+        /* Plant image styles */
+        .plant-image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .plant-image {
+            width: 256px;
+            height: 256px;
+            background-color: #4b5563;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Status styles */
+        .status-container {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .soil-status {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 0.5rem;
+        }
+
+        .moisture-level {
+            font-size: 1.25rem;
+            color: #059669;
+        }
+
+        /* Water pump section */
+        .water-pump-container {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+        }
+
+        .water-pump-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .water-pump-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #065f46;
+        }
+
+        .status-pill {
+            background-color: #ecfdf5;
+            color: #059669;
+            padding: 0.25rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+        }
+
+        .water-pump-image {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+
+        /* Button styles */
+        .control-button {
+            width: 100%;
+            background-color: #059669;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .control-button:hover {
+            background-color: #047857;
+        }
+
+        .control-button.off {
+            background-color: #eb6363;
+        }
+
+        .control-button.off:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title"><a href="index.html" style="text-decoration: none; color: inherit;">My Garden</a></h1>
+            <div class="dropdown">
+                <button class="settings-button" onclick="toggleDropdown()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+                <div class="dropdown-content" id="settingsDropdown">
+                    <div class="user-name" id="user-email">User</div>
+                    <a class="dropdown-item" id="logout-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Garden 1 -->
+            <div class="garden-card">
+                <h2>Garden 1</h2>
+                <div class="plant-image-container">
+                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/status-bunga-dnd9WGLvKKKJI7AvKzoRb88Si9Co8E.png" alt="Plant in pot" class="plant-image">
+                </div>
+                
+                <div class="status-container">
+                    <h2 class="soil-status" id="soil-status1">Soil Status: Loading...</h2>
+                    <p class="moisture-level" id="moisture-level1">Moisture Level: Loading...</p>
+                </div>
+                
+                <div class="water-pump-container">
+                    <div class="water-pump-header">
+                        <h3 class="water-pump-title">Water Pump 1</h3>
+                        <span class="status-pill" id="pump-status1">Loading...</span>
+                    </div>
+                    
+                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pompa-Q8gS4H1ptL9ryz5pQ7kuPDbxTx7Std.png" alt="Water Pump" class="water-pump-image">
+                    <button class="control-button" id="pump-control-button1">LOADING...</button>
+                </div>
+            </div>
+
+            <!-- Garden 2 -->
+            <div class="garden-card">
+                <h2>Garden 2</h2>
+                <div class="plant-image-container">
+                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/status-bunga-dnd9WGLvKKKJI7AvKzoRb88Si9Co8E.png" alt="Plant in pot" class="plant-image">
+                </div>
+                
+                <div class="status-container">
+                    <h2 class="soil-status" id="soil-status2">Soil Status: Loading...</h2>
+                    <p class="moisture-level" id="moisture-level2">Moisture Level: Loading...</p>
+                </div>
+                
+                <div class="water-pump-container">
+                    <div class="water-pump-header">
+                        <h3 class="water-pump-title">Water Pump 2</h3>
+                        <span class="status-pill" id="pump-status2">Loading...</span>
+                    </div>
+                    
+                    <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/pompa-Q8gS4H1ptL9ryz5pQ7kuPDbxTx7Std.png" alt="Water Pump" class="water-pump-image">
+                    <button class="control-button" id="pump-control-button2">LOADING...</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOJ--IeEt2l9x9MuPb6DAZHFbSKmeaARQ",
+            authDomain: "kebun-jambu.firebaseapp.com", 
+            projectId: "kebun-jambu",
+            storageBucket: "kebun-jambu.firebasestorage.app",
+            messagingSenderId: "215795847510",
+            appId: "1:215795847510:web:2bd4205097834fe15806f7",
+            measurementId: "G-8E3HCDTCD0",
+            databaseURL: "https://kebun-jambu-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        try {
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const analytics = firebase.analytics();
+            const database = firebase.database();
+            const auth = firebase.auth();
+
+            // Get references to the database
+            const sensorRef = database.ref('Kebun-Jambu/Sensor-Kelembaban-tanah');
+            const pumpRef = database.ref('Kebun-Jambu/pompa');
+
+            // Settings dropdown functionality
+            const settingsButton = document.querySelector('.settings-button');
+            if (settingsButton) {
+                settingsButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.getElementById('settingsDropdown').classList.toggle('show');
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                const dropdown = document.getElementById('settingsDropdown');
+                const settingsBtn = document.querySelector('.settings-button');
+                
+                if (dropdown && !settingsBtn.contains(event.target)) {
+                    if (dropdown.classList.contains('show')) {
+                        dropdown.classList.remove('show');
+                    }
+                }
+            });
+
+            // Logout functionality
+            const logoutButton = document.getElementById('logout-button');
+            if (logoutButton) {
+                logoutButton.addEventListener('click', () => {
+                    auth.signOut()
+                        .then(() => {
+                            console.log('User signed out successfully');
+                            // Clear auth data from localStorage on logout
+                            localStorage.removeItem('userAuth');
+                            window.location.href = 'login.html';
+                        })
+                        .catch((error) => {
+                            console.error('Error signing out:', error);
+                            alert('Failed to sign out. Please try again.');
+                        });
+                });
+            }
+
+            // Update sensor values
+            sensorRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                const moistureLevel1 = document.getElementById('moisture-level1');
+                const soilStatus1 = document.getElementById('soil-status1');
+                if (moistureLevel1 && soilStatus1) {
+                    moistureLevel1.textContent = `Moisture Level: ${data['kelembaban-tanah1']}%`;
+                    soilStatus1.textContent = `Soil Status: ${data['kelembaban-tanah1'] < 50 ? 'Dry' : 'Moist'}`;
+                }
+
+                const moistureLevel2 = document.getElementById('moisture-level2');
+                const soilStatus2 = document.getElementById('soil-status2');
+                if (moistureLevel2 && soilStatus2) {
+                    moistureLevel2.textContent = `Moisture Level: ${data['kelembaban-tanah2']}%`;
+                    soilStatus2.textContent = `Soil Status: ${data['kelembaban-tanah2'] < 50 ? 'Dry' : 'Moist'}`;
+                }
+            });
+
+            // Update pump status and handle controls
+            pumpRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                
+                // Update pump 1
+                const pumpStatus1 = document.getElementById('pump-status1');
+                const pumpButton1 = document.getElementById('pump-control-button1');
+                if (pumpStatus1 && pumpButton1) {
+                    pumpStatus1.textContent = data.pompa1.toUpperCase();
+                    pumpButton1.textContent = data.pompa1 === 'on' ? 'TURN OFF' : 'TURN ON';
+                    pumpButton1.className = `control-button ${data.pompa1 === 'on' ? 'off' : ''}`;
+                }
+
+                // Update pump 2
+                const pumpStatus2 = document.getElementById('pump-status2');
+                const pumpButton2 = document.getElementById('pump-control-button2');
+                if (pumpStatus2 && pumpButton2) {
+                    pumpStatus2.textContent = data.pompa2.toUpperCase();
+                    pumpButton2.textContent = data.pompa2 === 'on' ? 'TURN OFF' : 'TURN ON';
+                    pumpButton2.className = `control-button ${data.pompa2 === 'on' ? 'off' : ''}`;
+                }
+            });
+
+            // Check auth state on page load
+            const storedAuth = localStorage.getItem('userAuth');
+            if (!storedAuth) {
+                window.location.replace('login.html');
+            }
+
+            // Auth state observer
+            auth.onAuthStateChanged((user) => {
+                const userEmail = document.getElementById('user-email');
+                if (user && userEmail) {
+                    userEmail.textContent = user.email;
+                } else {
+                    // Only redirect if no stored auth
+                    if (!localStorage.getItem('userAuth')) {
+                        window.location.replace('login.html');
+                    }
+                }
+            });
+
+            // Add pump control button listeners
+            document.getElementById('pump-control-button1').addEventListener('click', () => {
+                const pumpStatus = document.getElementById('pump-status1').textContent.toLowerCase();
+                database.ref('Kebun-Jambu/pompa/pompa1').set(pumpStatus === 'on' ? 'off' : 'on');
+            });
+
+            document.getElementById('pump-control-button2').addEventListener('click', () => {
+                const pumpStatus = document.getElementById('pump-status2').textContent.toLowerCase();
+                database.ref('Kebun-Jambu/pompa/pompa2').set(pumpStatus === 'on' ? 'off' : 'on');
+            });
+
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            alert('Failed to initialize the application. Please check your internet connection.');
+        }
+    </script>
+</body>
+</html>

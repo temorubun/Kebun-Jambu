@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyGarden - Login</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='24' height='22' viewBox='0 0 24 22' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.75 3.49999C9.06563 3.49999 5.94844 5.91405 4.88906 9.24218C6.46406 8.4453 8.24062 7.99999 10.125 7.99999H14.25C14.6625 7.99999 15 8.33749 15 8.74999C15 9.16249 14.6625 9.49999 14.25 9.49999H13.5H10.125C9.34687 9.49999 8.59219 9.58905 7.86563 9.75311C6.65156 10.0297 5.52188 10.5219 4.51875 11.1922C1.79531 13.0062 0 16.1047 0 19.625V20.375C0 20.9984 0.501562 21.5 1.125 21.5C1.74844 21.5 2.25 20.9984 2.25 20.375V19.625C2.25 17.3422 3.22031 15.2891 4.77188 13.85C5.7 17.3891 8.92031 20 12.75 20H12.7969C18.9891 19.9672 24 13.8641 24 6.34061C24 4.34374 23.6484 2.4453 23.0109 0.734364C22.8891 0.410926 22.4156 0.424989 22.2516 0.729676C21.3703 2.37968 19.6266 3.49999 17.625 3.49999H12.75Z' fill='%23059669'/%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #d1fae5;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 28rem;
+            background-color: white;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .illustration {
+            width: 100%;
+            height: 16rem;
+            position: relative;
+        }
+
+        .illustration img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo svg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #059669;
+            margin-left: 0.5rem;
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .label {
+            display: block;
+            color: #374151;
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 1rem;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .input {
+            display: block;
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 9999px;
+            color: #9ca3af;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        .password-toggle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .eye-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #059669;
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .submit-button:hover {
+            background-color: #047857;
+        }
+
+        .submit-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.5);
+        }
+
+        .error-message {
+            color: #ef4444;
+            margin-top: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                max-width: 100%;
+            }
+        }
+        .logo-container a {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="illustration">
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/login-illustration-VrbSLgqwuerr4Mj0B8KsFkZjTmVXtG.png" alt="Login Illustration" width="358" height="190" style="object-fit: cover; border: 1px solid #E5E7EB;">
+                    
+            </div>
+            
+            <div class="content">
+                <div class="logo-container">
+                    <a href="index.html">
+                    <div class="logo">
+                        <svg width="24" height="22" viewBox="0 0 24 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.75 3.49999C9.06563 3.49999 5.94844 5.91405 4.88906 9.24218C6.46406 8.4453 8.24062 7.99999 10.125 7.99999H14.25C14.6625 7.99999 15 8.33749 15 8.74999C15 9.16249 14.6625 9.49999 14.25 9.49999H13.5H10.125C9.34687 9.49999 8.59219 9.58905 7.86563 9.75311C6.65156 10.0297 5.52188 10.5219 4.51875 11.1922C1.79531 13.0062 0 16.1047 0 19.625V20.375C0 20.9984 0.501562 21.5 1.125 21.5C1.74844 21.5 2.25 20.9984 2.25 20.375V19.625C2.25 17.3422 3.22031 15.2891 4.77188 13.85C5.7 17.3891 8.92031 20 12.75 20H12.7969C18.9891 19.9672 24 13.8641 24 6.34061C24 4.34374 23.6484 2.4453 23.0109 0.734364C22.8891 0.410926 22.4156 0.424989 22.2516 0.729676C21.3703 2.37968 19.6266 3.49999 17.625 3.49999H12.75Z" fill="#059669"/>
+                        </svg>
+                        
+                            <p class="logo-text">MyGarden</p>
+                        
+                    </div>
+                    </a>
+                </div>
+                
+                <form class="form">
+                    <div class="form-group">
+                        <label for="email" class="label">Email</label>
+                        <div class="input-container">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                </svg>
+                            </div>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="Enter your email"
+                                class="input"
+                            />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="label">Password</label>
+                        <div class="input-container">
+                            <div class="input-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <path d="M12 17h.01"></path>
+                                </svg>
+                            </div>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                placeholder="Enter your password"
+                                class="input"
+                            />
+                            <div class="password-toggle">
+                                <button type="button" class="eye-button" id="togglePassword">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-button">
+                        Sign In
+                    </button>
+                    
+                    <div class="error-message" id="login-error"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOJ--IeEt2l9x9MuPb6DAZHFbSKmeaARQ",
+            authDomain: "kebun-jambu.firebaseapp.com",
+            projectId: "kebun-jambu", 
+            storageBucket: "kebun-jambu.firebasestorage.app",
+            messagingSenderId: "215795847510",
+            appId: "1:215795847510:web:2bd4205097834fe15806f7",
+            measurementId: "G-8E3HCDTCD0"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+
+        // Check auth state on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cek apakah sudah di halaman login
+            if (window.location.pathname.includes('login.html')) {
+                // Cek status auth dari localStorage
+                const storedAuth = localStorage.getItem('userAuth');
+                if (storedAuth) {
+                    // Jika sudah login, redirect ke controller
+                    window.location.replace('controller.html');
+                    return;
+                }
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // Simpan status auth di localStorage
+                    localStorage.setItem('userAuth', JSON.stringify({
+                        uid: user.uid,
+                        email: user.email
+                    }));
+                    // Redirect ke controller
+                    window.location.replace('controller.html');
+                }
+            });
+
+            const loginForm = document.querySelector('form');
+            const loginError = document.getElementById('login-error');
+
+            // Handle form submission
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                loginError.textContent = '';
+
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    // Simpan status auth di localStorage
+                    localStorage.setItem('userAuth', JSON.stringify({
+                        uid: userCredential.user.uid,
+                        email: userCredential.user.email
+                    }));
+                    // Redirect ke controller
+                    window.location.replace('controller.html');
+                } catch (error) {
+                    console.error('Login error:', error);
+                    loginError.textContent = error.message || 'Failed to sign in. Please check your credentials.';
+                }
+            });
+
+            // Toggle password visibility
+            const togglePassword = document.getElementById('togglePassword');
+            if (togglePassword) {
+                const passwordInput = document.getElementById('password');
+                
+                togglePassword.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
