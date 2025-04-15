@@ -10,6 +10,12 @@ const int PUMP_PIN2 = 4;
 const int MOISTURE_PIN1 = 32;
 const int MOISTURE_PIN2 = 33;
 
+// Calibration values for soil moisture sensors
+const int DRY_VALUE1 = 2559;   // Kering untuk sensor 1
+const int WET_VALUE1 = 1123;   // Basah untuk sensor 1
+const int DRY_VALUE2 = 2559;   // Kering untuk sensor 2
+const int WET_VALUE2 = 1123;   // Basah untuk sensor 2
+
 // WiFi credentials  
 const char* ssid = "V20430";
 const char* password = "123456789";
@@ -29,188 +35,138 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
-// Track previous moisture state
-int previousMoistureState1 = -1; // -1 = initial state, 0 = dry (<60), 1 = wet (>=60)
-int previousMoistureState2 = -1; // -1 = initial state, 0 = dry (<60), 1 = wet (>=60)
+// Variables to store moisture threshold and current moisture levels
+float moistureThreshold1 = 60.0;
+float moistureThreshold2 = 60.0;
+float currentMoistureLevel1 = 0.0;
+float currentMoistureLevel2 = 0.0;
+
+// Function to calculate moisture percentage with calibration
+float calculateMoisturePercentage(int sensorValue, int dryValue, int wetValue) {
+  int moisturePercentage = map(sensorValue, dryValue, wetValue, 0, 100);
+  moisturePercentage = constrain(moisturePercentage, 0, 100);
+  return moisturePercentage;
+}
+
+// Function to update pump status in Firebase
+void updatePumpStatus(const char* pumpPath, const char* status) {
+  if (Firebase.RTDB.setString(&fbdo, pumpPath, status)) {
+    Serial.print("Updated pump status at ");
+    Serial.print(pumpPath);
+    Serial.print(" to: ");
+    Serial.println(status);
+  } else {
+    Serial.print("Failed to update pump status at ");
+    Serial.print(pumpPath);
+    Serial.print(". Error: ");
+    Serial.println(fbdo.errorReason().c_str());
+  }
+}
+
+// Function to control pump based on moisture threshold
+void controlPump(int pumpPin, float moistureLevel, float threshold, const char* pumpPath) {
+  if (moistureLevel < threshold) {
+    digitalWrite(pumpPin, HIGH);
+    updatePumpStatus(pumpPath, "on");
+    Serial.print("Pump turned ON. Moisture level ");
+    Serial.print(moistureLevel);
+    Serial.print(" is below threshold ");
+    Serial.println(threshold);
+  } else {
+    digitalWrite(pumpPin, LOW);
+    updatePumpStatus(pumpPath, "off");
+    Serial.print("Pump turned OFF. Moisture level ");
+    Serial.print(moistureLevel);
+    Serial.print(" is above threshold ");
+    Serial.println(threshold);
+  }
+}
 
 void setup() {
   Serial.begin(115200);
   
-  // Initialize pump pins as output and set initial state to OFF
+  // Initialize pump pins as output
   pinMode(PUMP_PIN1, OUTPUT);
   pinMode(PUMP_PIN2, OUTPUT);
-  digitalWrite(PUMP_PIN1, LOW); // Pump 1 is initially OFF
-  digitalWrite(PUMP_PIN2, LOW); // Pump 2 is initially OFF
+  digitalWrite(PUMP_PIN1, LOW);
+  digitalWrite(PUMP_PIN2, LOW);
   
   // Connect to WiFi
   WiFi.begin(ssid, password);
   Serial.println("Connecting to WiFi...");
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.print(".");
-    attempts++;
   }
+  Serial.println("\nConnected to WiFi");
   
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\nConnected to WiFi");
-    
-    // Configure Firebase
-    config.api_key = API_KEY;
-    config.database_url = DATABASE_URL;
-    
-    // Sign in with email/password
-    auth.user.email = USER_EMAIL;
-    auth.user.password = USER_PASSWORD;
-    
-    // Initialize Firebase with sign in
-    Firebase.begin(&config, &auth);
-    Firebase.reconnectWiFi(true);
-
-    // Check Firebase connection with timeout
-    unsigned long timeout = millis();
-    while (!Firebase.ready() && millis() - timeout < 10000) {
-      Serial.println("Waiting for Firebase connection...");
-      delay(1000);
-    }
-
-    if (Firebase.ready()) {
-      Serial.println("Connected to Firebase successfully!");
-    } else {
-      Serial.println("Failed to connect to Firebase - timeout!");
-    }
-  } else {
-    Serial.println("\nFailed to connect to WiFi!");
-  }
-}
-
-void updatePumpStatus(const char* newStatus, const char* path) {
-  if (Firebase.RTDB.setString(&fbdo, path, newStatus)) {
-    char msg[50];
-    snprintf(msg, sizeof(msg), "Successfully updated pump status to: %s", newStatus);
-    Serial.println(msg);
-  } else {
-    Serial.println("Failed to update pump status!");
-    Serial.println(fbdo.errorReason().c_str());
-  }
+  // Configure Firebase
+  config.api_key = API_KEY;
+  config.database_url = DATABASE_URL;
+  
+  // Sign in with email/password
+  auth.user.email = USER_EMAIL;
+  auth.user.password = USER_PASSWORD;
+  
+  // Initialize Firebase
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
 }
 
 void loop() {
+  // Check WiFi connection
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi connection lost! Attempting to reconnect...");
-    WiFi.begin(ssid, password);
+    Serial.println("WiFi disconnected. Reconnecting...");
+    WiFi.reconnect();
     delay(5000);
     return;
   }
-  
+
+  // Check Firebase connection
   if (!Firebase.ready()) {
-    Serial.println("Firebase not ready! Attempting to reconnect...");
-    // Full reconnect attempt
+    Serial.println("Firebase not ready. Reconnecting...");
     Firebase.begin(&config, &auth);
-    unsigned long timeout = millis();
-    while (!Firebase.ready() && millis() - timeout < 10000) {
-      Serial.println("Waiting for Firebase reconnection...");
-      delay(1000);
-    }
-    if (!Firebase.ready()) {
-      Serial.println("Firebase reconnection failed - timeout!");
-      delay(5000);
-      return;
-    }
+    delay(5000);
+    return;
   }
 
-  Serial.println("\n----- Reading Firebase Data -----");
+  // Read current moisture values from sensors
+  int rawSensorValue1 = analogRead(MOISTURE_PIN1);
+  int rawSensorValue2 = analogRead(MOISTURE_PIN2);
   
-  // Read soil moisture data from pin
-  float soilMoisturePercent1 = analogRead(MOISTURE_PIN1) * (100.0 / 4095.0);
-  if (Firebase.RTDB.setFloat(&fbdo, "/Kebun-Jambu/Sensor-Kelembaban-tanah/kelembaban-tanah1", soilMoisturePercent1)) {
-    char msg[50];
-    snprintf(msg, sizeof(msg), "Successfully updated Soil Moisture Level 1 to: %.1f%%", soilMoisturePercent1);
-    Serial.println(msg);
-  } else {
-    Serial.println("Failed to update Soil Moisture Level 1!");
-    Serial.println(fbdo.errorReason().c_str());
+  currentMoistureLevel1 = calculateMoisturePercentage(rawSensorValue1, DRY_VALUE1, WET_VALUE1);
+  currentMoistureLevel2 = calculateMoisturePercentage(rawSensorValue2, DRY_VALUE2, WET_VALUE2);
+
+  // Update moisture levels in Firebase
+  Firebase.RTDB.setFloat(&fbdo, "/Kebun-Jambu/Sensor-Kelembaban-tanah/kelembaban-tanah1", currentMoistureLevel1);
+  Firebase.RTDB.setFloat(&fbdo, "/Kebun-Jambu/Sensor-Kelembaban-tanah/kelembaban-tanah2", currentMoistureLevel2);
+
+  // Read moisture thresholds from Firebase (realtime)
+  if (Firebase.RTDB.getFloat(&fbdo, "/Kebun-Jambu/Threshold/moisture_threshold1")) {
+    moistureThreshold1 = fbdo.floatData();
   }
   
-  // Calculate current moisture state
-  int currentMoistureState1 = (soilMoisturePercent1 < 60) ? 0 : 1;
-  char msg[50]; // Declare msg here
-  snprintf(msg, sizeof(msg), "Moisture State 1: %d (0=Dry, 1=Wet)", currentMoistureState1);
-  Serial.println(msg);
-  
-  // Only update pump status if moisture state has changed
-  if (currentMoistureState1 != previousMoistureState1) {
-    if (currentMoistureState1 == 0) {
-      updatePumpStatus("on", "/Kebun-Jambu/pompa/pompa1");
-    } else {
-      updatePumpStatus("off", "/Kebun-Jambu/pompa/pompa1");
-    }
-    previousMoistureState1 = currentMoistureState1;
+  if (Firebase.RTDB.getFloat(&fbdo, "/Kebun-Jambu/Threshold/moisture_threshold2")) {
+    moistureThreshold2 = fbdo.floatData();
   }
 
-  // Get current pump status
-  if (Firebase.RTDB.getString(&fbdo, "/Kebun-Jambu/pompa/pompa1")) {
-    String pumpStatus1 = fbdo.stringData();
-    snprintf(msg, sizeof(msg), "Current Pump Status 1: %s", pumpStatus1.c_str());
-    Serial.println(msg);
-    
-    // Control pump based on status
-    if (pumpStatus1 == "on") {
-      digitalWrite(PUMP_PIN1, HIGH);
-      Serial.println("Pump 1 is turned ON");
-    } else {
-      digitalWrite(PUMP_PIN1, LOW);
-      Serial.println("Pump 1 is turned OFF");
-    }
-  } else {
-    Serial.println("Failed to read pump status 1 from Firebase!");
-    Serial.println(fbdo.errorReason().c_str());
-  }
+  // Control pumps based on realtime moisture thresholds
+  controlPump(PUMP_PIN1, currentMoistureLevel1, moistureThreshold1, "/Kebun-Jambu/pompa/pompa1");
+  controlPump(PUMP_PIN2, currentMoistureLevel2, moistureThreshold2, "/Kebun-Jambu/pompa/pompa2");
 
-  // Repeat the process for the second soil moisture sensor and pump
-  float soilMoisturePercent2 = analogRead(MOISTURE_PIN2) * (100.0 / 4095.0);
-  if (Firebase.RTDB.setFloat(&fbdo, "/Kebun-Jambu/Sensor-Kelembaban-tanah/kelembaban-tanah2", soilMoisturePercent2)) {
-    char msg[50]; // Declare msg here
-    snprintf(msg, sizeof(msg), "Successfully updated Soil Moisture Level 2 to: %.1f%%", soilMoisturePercent2);
-    Serial.println(msg);
-  } else {
-    Serial.println("Failed to update Soil Moisture Level 2!");
-    Serial.println(fbdo.errorReason().c_str());
-  }
+  // Print debug information
+  Serial.println("\n----- Moisture Status -----");
+  Serial.print("Moisture Level 1: ");
+  Serial.print(currentMoistureLevel1);
+  Serial.print("% (Threshold: ");
+  Serial.print(moistureThreshold1);
+  Serial.println("%)");
   
-  // Calculate current moisture state
-  int currentMoistureState2 = (soilMoisturePercent2 < 60) ? 0 : 1;
-  snprintf(msg, sizeof(msg), "Moisture State 2: %d (0=Dry, 1=Wet)", currentMoistureState2);
-  Serial.println(msg);
-  
-  // Only update pump status if moisture state has changed
-  if (currentMoistureState2 != previousMoistureState2) {
-    if (currentMoistureState2 == 0) {
-      updatePumpStatus("on", "/Kebun-Jambu/pompa/pompa2");
-    } else {
-      updatePumpStatus("off", "/Kebun-Jambu/pompa/pompa2");
-    }
-    previousMoistureState2 = currentMoistureState2;
-  }
+  Serial.print("Moisture Level 2: ");
+  Serial.print(currentMoistureLevel2);
+  Serial.print("% (Threshold: ");
+  Serial.print(moistureThreshold2);
+  Serial.println("%)");
 
-  // Get current pump status
-  if (Firebase.RTDB.getString(&fbdo, "/Kebun-Jambu/pompa/pompa2")) {
-    String pumpStatus2 = fbdo.stringData();
-    snprintf(msg, sizeof(msg), "Current Pump Status 2: %s", pumpStatus2.c_str());
-    Serial.println(msg);
-    
-    // Control pump based on status
-    if (pumpStatus2 == "on") {
-      digitalWrite(PUMP_PIN2, HIGH);
-      Serial.println("Pump 2 is turned ON");
-    } else {
-      digitalWrite(PUMP_PIN2, LOW);
-      Serial.println("Pump 2 is turned OFF");
-    }
-  } else {
-    Serial.println("Failed to read pump status 2 from Firebase!");
-    Serial.println(fbdo.errorReason().c_str());
-  }
-
-  delay(1); // Delay for 1 second before reading and sending data again
+  delay(1); // Wait 5 seconds before next reading
 }
