@@ -1,0 +1,18 @@
+#include <Arduino.h>
+
+const int sensorPin = 32; // ganti dengan GPIO34 jika pakai ESP32
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Mulai Kalibrasi Sensor Kelembaban Tanah...");
+  Serial.println("Masukkan sensor ke tanah kering, lalu catat nilai.");
+  Serial.println("Kemudian masukkan ke air, lalu catat nilai.");
+  delay(5000); // waktu tunggu untuk persiapan
+}
+
+void loop() {
+  int sensorValue = analogRead(sensorPin);
+  Serial.print("Nilai ADC: ");
+  Serial.println(sensorValue);
+  delay(1000);
+}
